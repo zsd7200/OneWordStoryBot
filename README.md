@@ -3,7 +3,7 @@
 
 Discord.js bot for one-word stories.
 
-The bot will record every message in a single channel after a user types the './start' command. After typing 'end', the message will be sent in Discord and posted to Twitter.
+The bot will record every message in a single channel after a user types the './start' command. After typing './end', the message will be sent in Discord and posted to Twitter.
 
 Requires [discord.js](https://www.npmjs.com/package/discord.js) and [twit](https://www.npmjs.com/package/twit).
 
