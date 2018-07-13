@@ -20,7 +20,7 @@ const prefix = './';
 // create other variables
 let listening = false;
 let returnStr = "";
-let channel;
+let channel = null;
 
 // The ready event is vital, it means that your bot will only start reacting to information
 // from Discord _after_ ready is emitted
@@ -56,8 +56,10 @@ client.on('message', message => {
 
     if(command === "start")
 	{
-		if(listening === true)
-			return message.channel.send("Already listening! I'll make sure this word isn't logged. :wink:");
+		if(listening === true && channel === message.channel)
+			return message.channel.send("Already listening on this channel! I'll make sure this word isn't logged. :wink:");
+		else if (listening === true && channel != message.channel)
+			return message.channel.send("Already listening on another channel!");
 		
 		listening = true;
 		channel = message.channel;
@@ -67,12 +69,32 @@ client.on('message', message => {
 
 	if (command === "end")
 	{
+		if(channel != message.channel)
+			return message.channel.send("`./end` must be run from the same channel that `./start` was called from.");
+		
 		if (returnStr == "")
 			return message.channel.send("You didn't write anything... But I'll keep listening!");
 		
 		listening = false;
+		channel = null;
 		
-		T.post('statuses/update', { status: returnStr }, function(err,data,response) { if (err) throw err; });
+		if (returnStr.length <= 280)
+		{
+			T.post('statuses/update', { status: returnStr }, function(err,data,response) { if (err) throw err; });
+		
+			setTimeout(function()
+			{
+				T.get('statuses/user_timeline', { screen_name: 'TrueZetsubou' }, function(err, data, response)
+				{
+					if (err) throw err;
+
+					message.channel.send("https://twitter.com/TrueZetsubou/status/" + data[0].id_str);
+				});
+			}, 3000);
+		}
+		
+		else
+			message.channel.send("Sorry, this one was too long for Twitter... But here's your final story:");
 		
 		return message.channel.send(returnStr);
 	}
