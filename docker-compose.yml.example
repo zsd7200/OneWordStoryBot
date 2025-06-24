@@ -1,0 +1,11 @@
+services:
+  one-word-story:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: one-word-story
+    environment:
+      BSKY_IDENT:    # bsky username
+      BSKY_PASS:     # bsky pass
+      DISCORD_TOKEN: # discord bot token
+    restart: unless-stopped

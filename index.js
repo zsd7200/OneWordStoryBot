@@ -1,18 +1,20 @@
 // Import the node modules
-const Discord = require('discord.js');
-let Twit = require('twit');
+import 'dotenv/config';
+import { BskyAgent } from '@atproto/api';
+import { Client, Events, GatewayIntentBits } from 'discord.js'
 
-// Create an instance of a Discord and a Twitter client
-const client = new Discord.Client();
-let T = new Twit({
-	consumer_key:         '',
-	consumer_secret:      '',
-	access_token:         '',
-	access_token_secret:  ''
+const client = new Client({ intents: [
+    GatewayIntentBits.Guilds, 
+    GatewayIntentBits.GuildMessages, 
+    GatewayIntentBits.MessageContent
+]});
+const agent = new BskyAgent({
+    service: 'https://bsky.social',
 });
-
-// The token of your bot - https://discordapp.com/developers/applications/me
-const token = '';
+await agent.login({
+    identifier: process.env.BSKY_IDENT,
+    password: process.env.BSKY_PASS,
+});
 
 // create bot prefix
 const prefix = './';
@@ -22,18 +24,34 @@ let listening = false;
 let returnStr = "";
 let channel = null;
 
+let atUriToBskyAppUrl = (atUri) => {
+  const regex = /^at:\/\/([^/]+)\/([^/]+)\/([^/]+)$/;
+  const match = atUri.match(regex);
+
+  if (!match) {
+    return null; // Invalid AT URI format
+  }
+
+  const did = match[1];
+  const collection = match[2];
+  const rkey = match[3];
+
+  if (collection === 'app.bsky.feed.post') {
+    return `https://bsky.app/profile/${did}/post/${rkey}`;
+  } else {
+    return null; // Not a post record
+  }
+};
+
 // The ready event is vital, it means that your bot will only start reacting to information
 // from Discord _after_ ready is emitted
-client.on('ready', () => {
-    client.user.setActivity("./start"); // set game upon login
-    console.log('ready to hear your story!');
+client.on(Events.ClientReady, readyClient => {
+    client.user?.setActivity("./start"); // set game upon login
+    console.log(`${readyClient.user.tag} is ready to hear your story!`);
 });
 
 // create an event listener for messages
-client.on('message', message => {
-    
-    // It's good practice to ignore other bots. This also makes your bot ignore itself
-    // and not get into a spam loop (we call that "botception").
+client.on(Events.MessageCreate, async message => {
     if(message.author.bot) return;
 
     // Otherwise ignore any message that does not start with the prefix, 
@@ -80,25 +98,22 @@ client.on('message', message => {
 		
 		if (returnStr.length <= 280)
 		{
-			T.post('statuses/update', { status: returnStr }, function(err,data,response) { if (err) throw err; });
-		
-			setTimeout(function()
-			{
-				T.get('statuses/user_timeline', { screen_name: 'TrueZetsubou' }, function(err, data, response)
-				{
-					if (err) throw err;
-
-					message.channel.send("https://twitter.com/TrueZetsubou/status/" + data[0].id_str);
-				});
-			}, 3000);
+			//T.post('statuses/update', { status: returnStr }, function(err,data,response) { if (err) throw err; });
+            await agent.post({
+                text: returnStr, 
+                createdAt: new Date().toISOString(),
+            })
+            .then(res => {
+                console.log(res);
+                message.channel.send(returnStr);
+                message.channel.send(atUriToBskyAppUrl(res.uri));
+            });
 		}
 		
 		else
 			message.channel.send("Sorry, this one was too long for Twitter... But here's your final story:");
-		
-		return message.channel.send(returnStr);
 	}
 });
 
 // log the bot in
-client.login(token);
+client.login(process.env.DISCORD_TOKEN);

@@ -1,0 +1,26 @@
+{
+  "name": "onewordstorybot",
+  "version": "1.0.0",
+  "description": "One word story Discord bot that posts things to Bluesky.",
+  "main": "index.ts",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zsd7200/OneWordStoryBot.git"
+  },
+  "author": "zsd7200",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/zsd7200/OneWordStoryBot/issues"
+  },
+  "homepage": "https://github.com/zsd7200/OneWordStoryBot#readme",
+  "dependencies": {
+    "@atproto/api": "^0.15.17",
+    "discord.js": "^14.20.0",
+    "dotenv": "^16.5.0"
+  }
+}
